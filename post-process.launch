@@ -1,0 +1,50 @@
+
+<launch>
+
+	<arg name="play" default="0" />
+	<!--outside - loop -->
+  <arg if="0" name="base" value="'/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-30-14_0.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-31-14_1.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-32-14_2.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-33-14_3.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-34-14_4.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-35-14_5.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-07-20-36-14_6.bag'" />
+	
+	<!--lab - loop -->	
+	<arg if="1" name="base" value="'/media/New Volume/ROS DATA/outside with velo/2013-05-04-14-15-13_0.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-04-14-16-13_1.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-04-14-17-14_2.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-04-14-18-13_3.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-04-14-19-14_4.bag' '/media/New Volume/ROS DATA/outside with velo/2013-05-04-14-20-14_5.bag'" />
+
+
+  <arg name="filename" value="" /> <!-- /2013.bag -->
+
+	<group if="$(arg play)">
+		<param name="use_sim_time" value="true"/>
+		<node pkg="rosbag" type="play" name="rosbag" args="--clock -r 1 -d 5 -k $(arg base)$(arg filename)"> 
+			<remap if="0" from="/tf" to="/tf_old" />
+		</node>
+		<node if="0" pkg="tf" type="tf_remap" name="tf_remap" />
+	</group>
+	
+	
+	<include if="1" file="pioneer_position.launch" />
+
+
+	<!-- velodyne -->
+	<node pkg="tf" type="static_transform_publisher"
+		name="velodyne_tf"
+  		args="0 0 0.75 -1.57 0 0 /base_footprint /velodyne 1000"
+	/><!-- rot: 0 0 0.75 -1.57 0 0 -->
+	
+	<node if="0" pkg="velodyne_height_map" type="heightmap_node" name="heightmap_node" >
+			<param name="cell_size" value="0.05"/>
+			<param name="grid_dimensions" value="500"/>
+			<param name="height_threshold" value="0.4"/>
+	</node>
+
+
+	<!-- maps -->
+	<include if="0" file="velodyne_mapper.launch" /> 	<!-- icp -->
+	<include if="0" file="velodyne_mapper.launch" /> 	<!-- icp -->
+	<include if="0" file="octomap_mapping.launch" />	<!-- oct -->
+	
+	
+	<node pkg="rviz" type="rviz" name="rviz" /> <!-- args="/home/robot2/.rviz/pioneer-velo.vcg" -->
+
+
+	<node if="0" pkg="rosbag" type="record" name="rosbag_rec" args="/tf /velodyne_points" /> 
+
+</launch>
