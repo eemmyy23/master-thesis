@@ -1,0 +1,10 @@
+<launch> 
+	<node pkg="odom_covariance" type="odometry_to_path" name="odometry_to_path_base_link">
+		<remap from="odometry" to="/RosAria/pose" />
+		<remap from="path" to="/RosAria/path" />	
+	</node>
+</launch>
+
+
+
+

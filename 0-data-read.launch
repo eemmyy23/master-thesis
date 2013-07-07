@@ -1,0 +1,62 @@
+<!-- main launcher for data aquisition only -->
+
+<launch>
+	<arg name="rec" default="0"/>
+  
+	<!-- start velodyne -->
+	<group if="1">
+		<!-- start nodelet manager and driver nodelets -->
+		<include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
+		  <arg name="model" value="32E"/>
+		</include>
+
+		<!-- start cloud nodelet --><!-- should use transform nodelet to have different frame id -->
+		<include if="1" file="$(find velodyne_pointcloud)/launch/cloud_nodelet.launch">
+			<arg name="calibration" value="$(find velodyne_pointcloud)/params/32db.yaml"/>
+		</include>
+	</group>
+
+
+	<!-- joystock drivers and robot control -->
+	<!-- https://code.google.com/p/rma-ros-install/ -->
+	<include if="1" file="$(find robotV1)/launch/robotV1.launch" />
+	
+
+	<!-- IMU Xsens, Trivisio and MST -->
+	<!-- compute a vector with relative roll pitch yaw to initial orientation-->
+	<include file="$(find imu-test)/launch/orientation.launch" />
+	
+
+	<!-- web cam -->
+	<include file="/home/robot2/ros_workspace/camera.launch" />
+	
+
+	<!-- record only needed messages. One minute per file -->
+	<group if="$(arg rec)">
+		<node if="1" pkg="rosbag" type="record" name="record"  output="screen" args="--split --duration=60 
+/RosAria/cmd_vel
+/RosAria/pose
+/gscam/image_raw/compressed
+/joy
+/mst/imu/data
+/mst/imu/delta
+/mst/imu/euler
+/mst/imu/initial
+/mst/imu/is_calibrated
+/mst/imu/reset
+/tf
+/velodyne_points
+/xsens/fix
+/xsens/fix_extended
+/xsens/imu/data
+/xsens/imu/delta
+/xsens/imu/euler
+/xsens/imu/initial
+/xsens/imu/reset
+/xsens/magnetic
+/xsens/temperature
+/xsens/velocity
+" />
+	</group>
+</launch>
+<!--/fix /xsens/fix_extended /xsens/imu/data /xsens/imu/delta /xsens/imu/euler /xsens/magnetic /xsens/temperature /xsens/velocity-->

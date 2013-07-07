@@ -1,0 +1,9 @@
+<package>
+  <name>master-thesis</name>
+  <version>1.0.0</version>
+  <description>
+  Thesis launchers
+  </description>
+  <maintainer email="emi.puscalau@gmail.com">Emi Puscalau</maintainer>
+  <license>BSD</license>
+</package>

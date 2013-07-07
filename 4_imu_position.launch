@@ -1,0 +1,17 @@
+<launch> 
+
+	<group ns="xsens">
+		<node pkg="imu_position" type="imu_position" name="imu_position"/>
+		<node pkg="imu_position" type="dynamic_reconfigure" name="xsens"/>
+	</group>
+
+	<group ns="trivisio">
+		<node pkg="imu_position" type="imu_position" name="imu_position"/>
+		<node pkg="imu_position" type="dynamic_reconfigure" name="trivisio"/>
+	</group>
+
+</launch>
+
+
+
+

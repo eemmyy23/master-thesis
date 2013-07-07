@@ -1,0 +1,48 @@
+<!-- paly recorded data and run prcessing packages -->
+
+<launch>
+	<arg name="play" default="0" /> 
+
+<arg name="base" default="
+'/media/sda4/save/ros-data summit/2013-05-19-23-12-29_0.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-13-29_1.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-14-31_2.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-15-29_3.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-16-29_4.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-17-30_5.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-18-29_6.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-19-42_7.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-20-51_8.bag' 
+'/media/sda4/save/ros-data summit/2013-05-19-23-31-33_0.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-32-34_1.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-33-37_2.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-34-59_3.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-35-34_4.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-36-33_5.bag' '/media/sda4/save/ros-data summit/2013-05-19-23-37-33_6.bag' " />
+<arg name="filename" default="" />
+
+	<group if="$(arg play)">
+		<param name="use_sim_time" value="true"/>
+		<node pkg="rosbag" type="play" name="rosbag" args="--clock -d 15 -k $(arg base)$(arg filename)" output="screen"> 
+			<remap if="0" from="/tf" to="/tf_old" />
+		</node>
+		<node if="0" pkg="tf" type="tf_remap" name="tf_remap" />
+	</group>
+
+	<node if="0" pkg="rviz" type="rviz" name="rviz"/>
+	
+	<!-- velodyne -->
+	<node if="0" pkg="velodyne_pointcloud" type="cloud_node" name="cloud_velodyne">
+		<param name="calibration" value="$(find velodyne_pointcloud)/params/32db.yaml"/>
+	</node>
+	<node if="1" pkg="tf" type="static_transform_publisher"
+		name="velodyne_tf"
+  		args="-0.0020963 -0.0138918 0.5756685 -1.545 -0.0048332 0.024169 /base_link /velodyne 10"
+
+	/>		
+		<!-- pioneer 0 0 0.75 -1.57 0 0 /base_link /velodyne 1000 -->
+	<group if="0"> <!--pioneer 3AT -->
+		<!-- lanuch pocessing package -->
+		<include if="0" file="pioneer/2-odometry-display.launch" />
+		<include if="0" file="pioneer/3-imu-position.launch" />
+		<include if="0" file="pioneer/4-ekf-position.launch" />
+	</group>
+
+	<include if="0" file="icp_velodyne.launch" />
+	<include if="0" file="2D_mapper.launch" />
+	<include if="1" file="octomap_mapping.launch" />
+	<include if="1" file="hector_mapping.launch" />
+	
+	<!-- record processed data -->
+	<node if="0" pkg="rosbag" type="record" name="rosbag_rec" args="/RosAria/pose /robot_pose_ekf/odometry /icp_odom" output="screen"/> 
+
+	
+
+</launch>

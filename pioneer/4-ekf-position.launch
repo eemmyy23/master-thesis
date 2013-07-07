@@ -9,11 +9,15 @@
 		<param name="changeCov" value="true" />
 		<param name="posX" value="9999.0" />
 		<param name="posY" value="9999.0" />
-		<param name="rotZ" value="0.1" /> 
-		<!-- 9999, 0.1, 0.274155678 (from 30deg), 1.0966 (from 60deg), 0.616850275 (from 45deg) --> 
+		<param name="rotZ" value="0.274155678" /> 
+		<!-- 9999, 0.1, 	0.274155678 (from 30deg), 0.616850275 (from 45deg), 1.0966 (from 60deg)  --> 
 	</node>
 
 	<node pkg="odom_covariance" type="pose_to_odometry" name="pose_to_odometry" />
+	<node pkg="odom_covariance" type="odometry_to_path" name="odometry_to_path_base_basefootprint">
+		<remap from="odometry" to="/robot_pose_ekf/odometry" />
+		<remap from="path" to="/robot_pose_ekf/path" />	
+	</node>
 
 	<node if="0" pkg="gps_common" type="utm_odometry_node" name="utm_odometry_node">
 		<remap from="fix" to="xsens/fix" />
