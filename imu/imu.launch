@@ -1,0 +1,84 @@
+<launch>
+	<param name="use_sim_time" value="true"/>
+	<arg name="record" default="0"/>
+	<arg name="play" default="1"/> 
+<!--
+	<arg name="bagDir" default="/media/sda4/save/ROS_DATA/" />
+	<arg name="bagFile" default="2013-04-29-14-53-14_0.bag"/> 
+-->
+	<arg name="bagDir" value="'/media/sda4/save/ROS_DATA/'" />
+	<arg name="bagFile" value="'2013-05-02-05-33-27_0.bag' 
+	"/> 
+<!--
+ '/media/sda4/save/ros-data summit1/2013-05-19-11-04-08_5.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-05-08_6.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-06-07_7.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-07-07_8.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-08-07_9.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-09-07_10.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-10-18_11.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-11-21_12.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-12-07_13.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-13-07_14.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-14-07_15.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-15-07_16.bag' '/media/sda4/save/ros-data summit1/2013-05-19-11-16-20_17.bag'   
+-->
+	<arg name="bagName" default="$(arg bagDir)$(arg bagFile)"/> 
+	<arg name="aMin" default="0.3"/> 
+	<arg name="bagPlayArg" default="--clock -d 3"/>  
+	<arg name="plotArg" default=" -p 54"/>  
+	
+	<group unless="$(arg play)">
+		<include ns="trivisio" file="$(find robotV1)/launch/imu_trivisio.launch">
+			<arg name="aMin" value="$(arg aMin)"/>
+		</include>
+	
+		<include ns="xsens" file="$(find robotV1)/launch/imu_xsens.launch">
+			<arg name="aMin" value="$(arg aMin)"/>
+		</include>
+
+		<include file="$(find robotV1)/launch/robotV1.launch"/>
+
+		<group if="$(arg record)">
+			<node ns="trivisio"  pkg="rosbag" type="record" name="record" args="$(arg bagArg) -O $(arg bagName)-trivisio imu/data"  />
+			<node ns="xsens" 		 pkg="rosbag" type="record" name="record" args="$(arg bagArg) -O $(arg bagName)-xsens imu/data"  />
+			<node                pkg="rosbag" type="record" name="record" args="$(arg bagArg) -O $(arg bagName)-robot RosAria/pose" />
+		</group>
+
+	</group>
+
+	<group if="$(arg play)">
+		
+		<node pkg="rosbag" type="play" name="play" args="$(arg bagPlayArg) $(arg bagName)" output="screen"/>
+		
+		
+		<group if="0" ns="xsens">
+		
+			<node if="1" pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_orientation_mag" output="screen">
+				<remap from="imu/data_raw" to="imu/data"/>
+				<remap from="imu/data" to="imu/data_filter_mag"/>
+				<remap from="imu/mag" to="magnetic" />
+				<param name="use_mag" value="true" />
+				<param name="gain" value="0.1" />
+			</node>
+			
+			<node pkg="imu-test" type="orientation_node" name="orientation_mag">
+				<remap from="imu/data" to="imu/data_filter_mag"/>
+				<remap from="imu/delta" to="imu/delta_filter_mag"/>
+				<remap from="imu/euler" to="imu/euler_filter_mag"/>
+				<remap from="imu/initial" to="imu/initial_filter_mag"/>
+			</node>
+			
+			<node if="1" pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_orientation" output="screen">
+				<remap from="imu/data_raw" to="imu/data"/>
+				<remap from="imu/data" to="imu/data_filter"/>
+				<remap from="imu/mag" to="magnetic" />
+				<param name="use_mag" value="false" />
+				<param name="gain" value="0.1" />
+			</node>
+			
+			<node pkg="imu-test" type="orientation_node" name="orientation">
+				<remap from="imu/data" to="imu/data_filter"/>
+				<remap from="imu/delta" to="imu/delta_filter"/>
+				<remap from="imu/euler" to="imu/euler_filter"/>
+				<remap from="imu/initial" to="imu/initial_filter"/>
+			</node>
+			
+
+			
+		</group>
+
+	</group>
+	
+	<node if="0" pkg="rosbag" type="record" name="record" args="-O $(arg bagDir)test06.bag /xsens/imu/delta /xsens/imu/delta_filter_mag /xsens/imu/delta_filter" output="screen"/>
+
+</launch>

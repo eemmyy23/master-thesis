@@ -1,0 +1,50 @@
+<launch>
+
+<arg name="bagName" default="temp"/> 
+<arg name="aMin" default="0"/> 
+<arg name="bagArg" default=""/>  
+<arg name="plotArg" default=""/>  
+
+<group ns="trivisio">		 
+
+
+		<node  pkg="dynamic_reconfigure" type="dynparam" name="dynparam" args="set imu_position_reconf aMin $(arg aMin)" />
+
+		<node  pkg="imu_position" type="example" name="imu_position" output="screen"/>
+
+		<node  pkg="imu_position" type="dynamic_reconfigure_node" name="imu_position_reconf">
+		</node>
+
+		<node  pkg="dynamic_reconfigure" type="reconfigure_gui" name="reconfigure_gui_1">
+		</node>
+
+		<node  pkg="rxtools" type="rxplot" name="plot_accel" args="$(arg plotArg) imu/data/linear_acceleration/x:y, imu/filtered_accel/x:y" />
+		<node  pkg="rxtools" type="rxplot" name="plot_position" args="$(arg plotArg) imu/position/x:y" />
+
+</group>
+
+
+<group ns="xsens">		
+
+		<node  pkg="dynamic_reconfigure" type="dynparam" name="dynparam1" args="set imu_position_reconf aMin $(arg aMin)" />
+
+		<node  pkg="imu_position" type="example" name="imu_position" output="screen">
+		</node>
+
+
+		<node  pkg="imu_position" type="dynamic_reconfigure_node" name="imu_position_reconf">
+		</node>
+
+		<node  pkg="dynamic_reconfigure" type="reconfigure_gui" name="reconfigure_gui_2">
+		</node>
+
+		<node  pkg="rxtools" type="rxplot" name="plot_accel" args="$(arg plotArg) imu/data/linear_acceleration/x:y, imu/filtered_accel/x:y"/>
+		<node  pkg="rxtools" type="rxplot" name="plot_position" args="$(arg plotArg) imu/position/x:y" />
+
+		<node pkg="rosbag" type="play" name="play" args="$(arg bagArg) -d 5 $(arg bagName)-xsens.bag"  />
+
+</group>
+
+
+
+</launch> 

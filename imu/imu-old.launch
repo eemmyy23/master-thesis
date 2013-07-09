@@ -1,0 +1,44 @@
+<launch>
+	<param name="use_sim_time" value="true"/>
+	<arg name="record" default="1"/>
+	<arg name="play" default="1"/> 
+
+	<arg name="bagDir" default="/home/robot2/Dropbox/EMI-RMA/AS004-lab/test5-combined/" />
+	<arg name="bagFile" default="01-static"/> 
+	<arg name="bagName" default="$(arg bagDir)$(arg bagFile)"/> 
+	<arg name="aMin" default="0.3"/> 
+	<arg name="bagArg" default=""/>  
+	<arg name="bagPlayArg" default="--clock"/>  
+	<arg name="plotArg" default=" -p 54"/>  
+	
+	<group unless="$(arg play)">
+		<include ns="trivisio" file="$(find robotV1)/launch/imu_trivisio.launch">
+			<arg name="aMin" value="$(arg aMin)"/>
+		</include>
+	
+		<include ns="xsens" file="$(find robotV1)/launch/imu_xsens.launch">
+			<arg name="aMin" value="$(arg aMin)"/>
+		</include>
+
+		<include file="$(find robotV1)/launch/robotV1.launch"/>
+
+		<group if="$(arg record)">
+			<node ns="trivisio"  pkg="rosbag" type="record" name="record" args="$(arg bagArg) -O $(arg bagName)-trivisio imu/data"  />
+			<node ns="xsens" 		 pkg="rosbag" type="record" name="record" args="$(arg bagArg) -O $(arg bagName)-xsens imu/data"  />
+			<node                pkg="rosbag" type="record" name="record" args="$(arg bagArg) -O $(arg bagName)-robot RosAria/pose" />
+		</group>
+
+	</group>
+
+	<group if="$(arg play)">
+		<include file="$(find robotV1)/launch/imu_play.launch">		
+			<arg name="bagName" value="$(arg bagName)"/> 
+			<arg name="aMin" value="$(arg aMin)"/> 
+			<arg name="bagArg" value="$(arg bagPlayArg)"/>
+			<arg name="plotArg" value="$(arg plotArg)"/>
+		</include>
+		<node pkg="rosbag" type="play" name="play" args="$(arg bagPlayArg) $(arg bagName)-robot.bag"  />
+		<node  pkg="rxtools" type="rxplot" name="plot_robot" args="$(arg plotArg) RosAria/pose/pose/pose/position/x"/>
+	</group>
+
+</launch>
